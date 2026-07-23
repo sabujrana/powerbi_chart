@@ -1,0 +1,113 @@
+table dataset
+	lineageTag: 1720545f-f7a4-4c73-97b6-c11b7682003c
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a63bba29-7ad4-4d7f-a532-0d06808aab46
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: b56b288e-f271-40d7-aecb-6c2ff15f57a5
+			defaultHierarchy: LocalDateTable_b255670c-bf11-468c-8ec4-c964c5b5a4b9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Time
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: a5b8524f-f79b-4a55-bccf-13e731b12a4d
+		summarizeBy: none
+		sourceColumn: Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Jewelery_Type
+		dataType: string
+		lineageTag: 4fce5c1f-0335-4198-a65c-71d91bffbb50
+		summarizeBy: none
+		sourceColumn: Jewelery_Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column BrandID
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d95ed4d-2809-4aa0-b76f-92d127086d71
+		summarizeBy: count
+		sourceColumn: BrandID
+
+		annotation SummarizationSetBy = Automatic
+
+	column USDPrice
+		dataType: decimal
+		formatString: \$#,0.###############;-\$#,0.###############;\$#,0.###############
+		lineageTag: ed191f72-4873-4233-92a0-20a27ae9f3c6
+		summarizeBy: sum
+		sourceColumn: USDPrice
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-CA"}
+
+	column Color
+		dataType: string
+		lineageTag: 2c1e8063-4835-4cb7-b1b0-7df80db2616d
+		summarizeBy: none
+		sourceColumn: Color
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metal
+		dataType: string
+		lineageTag: bf0b0bb9-7a77-4714-b8b1-155a167f2baa
+		summarizeBy: none
+		sourceColumn: Metal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gem
+		dataType: string
+		lineageTag: ba7d5810-0c40-45cd-a5e9-d3ca28b2131b
+		summarizeBy: none
+		sourceColumn: Gem
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dataset = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\sabuj\Downloads\dataset.csv"),[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Datetime", type text}, {"OrderID", Int64.Type}, {"ProductID", Int64.Type}, {"Quantity", Int64.Type}, {"CategoryID", Int64.Type}, {"CategoryCode", type text}, {"BrandID", Int64.Type}, {"USDPrice", type number}, {"UserID", Int64.Type}, {"Gender", type text}, {"Color", type text}, {"Metal", type text}, {"Gem", type text}}),
+				    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "Datetime", Splitter.SplitTextByDelimiter(" ", QuoteStyle.Csv), {"Datetime.1", "Datetime.2", "Datetime.3"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Datetime.1", type date}, {"Datetime.2", type time}, {"Datetime.3", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type1",{"Datetime.3"}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Removed Columns",{{"Datetime.1", type date}, {"Datetime.2", type time}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"Datetime.1", "Date"}, {"Datetime.2", "Time"}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns",{"OrderID", "ProductID", "Quantity", "CategoryID"}),
+				    #"Split Column by Delimiter1" = Table.SplitColumn(#"Removed Columns1", "CategoryCode", Splitter.SplitTextByDelimiter(".", QuoteStyle.Csv), {"CategoryCode.1", "CategoryCode.2"}),
+				    #"Changed Type3" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"CategoryCode.1", type text}, {"CategoryCode.2", type text}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Changed Type3",{"CategoryCode.1"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns2",{{"CategoryCode.2", "Jewelery_Type"}}),
+				    #"Changed Type4" = Table.TransformColumnTypes(#"Renamed Columns1",{{"USDPrice", Currency.Type}}),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Changed Type4",{"UserID", "Gender"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Columns3", each [Jewelery_Type] <> null and [Jewelery_Type] <> ""),
+				    #"Filtered Rows1" = Table.SelectRows(#"Filtered Rows", each [BrandID] <> null and [BrandID] <> ""),
+				    #"Filtered Rows2" = Table.SelectRows(#"Filtered Rows1", each [USDPrice] <> null and [USDPrice] <> ""),
+				    #"Filtered Rows3" = Table.SelectRows(#"Filtered Rows2", each [Color] <> null and [Color] <> ""),
+				    #"Filtered Rows4" = Table.SelectRows(#"Filtered Rows3", each [Gem] <> null and [Gem] <> "")
+				in
+				    #"Filtered Rows4"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,9 @@
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+# Power BI
+*.pbix
+.pbi
+__pycache__/
+
+# Optional: Ignore large CSVs if you don't want data in version control
+# dataset/*.csv
